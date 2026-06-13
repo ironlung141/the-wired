@@ -271,11 +271,12 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .overlay{position:fixed;inset:0;background:rgba(4,2,6,.9);display:none;align-items:center;justify-content:center;z-index:800}
 .overlay.on{display:flex}
 .modal{background:var(--bg2);border:1px solid var(--dim2);width:520px;max-height:92vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.85)}
-.modal-banner{height:110px;position:relative;border-bottom:1px solid var(--dim);overflow:hidden;flex-shrink:0;background:var(--bg3);cursor:pointer}
+.modal-banner{height:110px;position:relative;border-bottom:1px solid var(--dim);flex-shrink:0;background:var(--bg3);overflow:visible}
 .modal-banner-bg{position:absolute;inset:0;background:var(--bg3)}
 .modal-banner-img{position:absolute;inset:0;object-fit:cover;width:100%;height:100%;opacity:.85}
 .modal-banner-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);opacity:0;transition:opacity .2s;font-size:11px;color:var(--pale);letter-spacing:2px}
 .modal-banner:hover .modal-banner-hint{opacity:1}
+/* banner hover handled via JS now for the split zone */
 .modal-x{position:absolute;top:10px;right:12px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:18px;border-radius:50%;transition:color .2s,background .2s;z-index:2}
 .modal-x:hover{color:var(--pale);background:rgba(255,255,255,.07)}
 .modal-av-wrap{position:absolute;bottom:-28px;left:18px;z-index:2}
@@ -476,14 +477,21 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 <!-- EDIT PROFILE MODAL -->
 <div class="overlay" id="edit-overlay" onclick="bgClose(event,'edit-overlay')">
 <div class="modal">
-  <div class="modal-banner" id="modal-banner-click" onclick="document.getElementById('banner-file').click()">
-    <div class="modal-banner-bg" id="edit-banner-bg"></div>
-    <img class="modal-banner-img" id="edit-banner-img" src="" style="display:none">
-    <div class="modal-banner-hint">CLICK TO CHANGE BANNER</div>
+  <!-- Banner: clicking the banner area opens banner picker -->
+  <div class="modal-banner" id="modal-banner-click">
+    <div class="modal-banner-bg" id="edit-banner-bg" style="position:absolute;inset:0"></div>
+    <img class="modal-banner-img" id="edit-banner-img" src="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.85">
+    <!-- Banner click zone: excludes avatar area on left -->
+    <div onclick="document.getElementById('banner-file').click()" style="position:absolute;inset:0;left:110px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+      <div class="modal-banner-hint" style="opacity:0;transition:opacity .2s;font-size:11px;color:var(--pale);letter-spacing:2px;background:rgba(0,0,0,.45);padding:6px 14px" id="banner-hint">CLICK TO CHANGE BANNER</div>
+    </div>
     <input type="file" id="banner-file" accept="image/*" style="display:none" onchange="uploadBannerImg(event)"/>
-    <div class="modal-x" onclick="event.stopPropagation();closeEdit()">✕</div>
-    <div class="modal-av-wrap">
-      <div class="modal-av" id="edit-av" onclick="event.stopPropagation();document.getElementById('av-file').click()">
+    <div class="modal-x" onclick="closeEdit()" style="position:absolute;top:10px;right:12px;z-index:10">✕</div>
+  </div>
+  <!-- Avatar: completely outside the banner div, positioned absolutely relative to modal -->
+  <div style="position:relative;height:0">
+    <div style="position:absolute;left:18px;top:-28px;z-index:10">
+      <div class="modal-av" id="edit-av" onclick="document.getElementById('av-file').click()" style="border:4px solid var(--bg2)">
         <div class="av-ov">Change<br>Avatar</div>
       </div>
       <input type="file" id="av-file" accept="image/*" style="display:none" onchange="uploadAv(event)"/>
@@ -1113,13 +1121,20 @@ function openEdit(){
   else{bannerBg.style.background=bg;bannerImg.style.display='none'}
   pendingBanner=null;pendingAvatar=null;
   const av=document.getElementById('edit-av');
-  av.innerHTML=(ME.avatar?`<img src="${esc(ME.avatar)}" style="width:100%;height:100%;object-fit:cover">`:`<span>${(ME.display||ME.username||'?')[0].toUpperCase()}</span>`)+'<div class="av-ov">Change<br>Avatar</div>';
+  av.innerHTML=(ME.avatar
+    ? `<img src="${esc(ME.avatar)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+    : `<span>${(ME.display||ME.username||'?')[0].toUpperCase()}</span>`)
+    +'<div class="av-ov">Change<br>Avatar</div>';
   // security tab
   const enabled=ME.totp_enabled;
   document.getElementById('totp-status-tag').textContent=enabled?'ENABLED':'DISABLED';
   document.getElementById('totp-status-tag').className='status-tag '+(enabled?'enabled':'disabled');
   document.getElementById('totp-enable-section').style.display=enabled?'none':'';
   document.getElementById('totp-disable-section').style.display=enabled?'':'none';
+  // Banner hover hint
+  const bzone=document.getElementById('banner-hint');
+  const bclick=bzone&&bzone.parentElement;
+  if(bclick){bclick.onmouseenter=()=>{if(bzone)bzone.style.opacity='1'};bclick.onmouseleave=()=>{if(bzone)bzone.style.opacity='0'}}
   document.getElementById('save-profile-btn').disabled=false;
   document.getElementById('save-profile-btn').textContent='SAVE TO WIRED';
   updatePreview();editTab('ef-edit');
@@ -1164,7 +1179,12 @@ function uploadAv(e){
   const f=e.target.files[0];if(!f)return;
   const fd=new FormData();fd.append('avatar',f);
   fetch('/api/avatar',{method:'POST',body:fd}).then(r=>r.json()).then(d=>{
-    if(d.ok){pendingAvatar=d.avatar;ME.avatar=d.avatar;const av=document.getElementById('edit-av');av.innerHTML=`<img src="${esc(d.avatar)}" style="width:100%;height:100%;object-fit:cover"><div class="av-ov">Change<br>Avatar</div>`;renderFooter();renderMembers();updatePreview();showToast('Avatar updated.')}else showToast('Upload failed')
+    if(d.ok){
+      pendingAvatar=d.avatar;ME.avatar=d.avatar;
+      const av=document.getElementById('edit-av');
+      av.innerHTML=`<img src="${esc(d.avatar)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"><div class="av-ov">Change<br>Avatar</div>`;
+      renderFooter();renderMembers();updatePreview();showToast('Avatar updated.');
+    }else showToast('Upload failed');
   }).catch(()=>showToast('Upload failed'));
 }
 
