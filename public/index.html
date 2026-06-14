@@ -91,7 +91,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .sb-foot{margin-top:auto;padding:8px 10px;border-top:1px solid var(--dim);background:rgba(7,4,9,.75);display:flex;align-items:center;gap:8px;flex-shrink:0}
 .av-sm{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--dim);display:flex;align-items:center;justify-content:center;font-family:var(--vt);font-size:16px;color:var(--pale);cursor:pointer;flex-shrink:0;overflow:hidden;transition:border-color .2s}
 .av-sm:hover{border-color:var(--red)}
-.av-sm img{width:100%;height:100%;object-fit:cover}
+.av-sm img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .foot-info{flex:1;min-width:0;cursor:pointer}
 .foot-name{font-size:12px;color:var(--pale);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:bold}
 .foot-stat{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
@@ -115,7 +115,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .msg-wrap.first-in-group{padding-top:10px}
 .msg-av{width:38px;height:38px;border-radius:50%;background:var(--bg3);border:1px solid var(--dim);display:flex;align-items:center;justify-content:center;font-family:var(--vt);font-size:17px;color:var(--pale);flex-shrink:0;overflow:hidden;cursor:pointer;transition:border-color .2s;align-self:flex-start;margin-top:2px}
 .msg-av:hover{border-color:var(--red)}
-.msg-av img{width:100%;height:100%;object-fit:cover}
+.msg-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .msg-av-ghost{width:38px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end;padding-right:8px}
 .ts-hover{font-size:9px;color:transparent;transition:color .1s;white-space:nowrap;line-height:38px}
 .msg-wrap:hover .ts-hover{color:var(--muted)}
@@ -212,7 +212,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .mention-item{display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;transition:background .1s}
 .mention-item:hover,.mention-item.sel{background:rgba(139,32,53,.15)}
 .mention-item-av{width:26px;height:26px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-family:var(--vt);font-size:12px;color:var(--pale);flex-shrink:0;overflow:hidden}
-.mention-item-av img{width:100%;height:100%;object-fit:cover}
+.mention-item-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .mention-item-name{font-size:12px;color:var(--pale);letter-spacing:.3px}
 .mention-item-tag{font-size:10px;color:var(--muted)}
 
@@ -232,8 +232,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .mem-sec:first-child{margin-top:0}
 .mem-item{display:flex;align-items:center;gap:8px;padding:5px 12px;cursor:pointer;border-radius:3px;margin:1px 6px;transition:background .15s}
 .mem-item:hover{background:rgba(139,32,53,.1)}
-.mem-av{width:32px;height:32px;border-radius:50%;background:var(--bg3);border:1px solid var(--dim);display:flex;align-items:center;justify-content:center;font-family:var(--vt);font-size:14px;color:var(--pale);flex-shrink:0;overflow:hidden;position:relative}
-.mem-av img{width:100%;height:100%;object-fit:cover}
+.mem-av{width:32px;height:32px;border-radius:50%;background:var(--bg3);border:1px solid var(--dim);display:flex;align-items:center;justify-content:center;font-family:var(--vt);font-size:14px;color:var(--pale);flex-shrink:0;overflow:hidden;position:relative;border-radius:50%}
+.mem-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .odot{position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--bg2)}
 .odot.on{background:var(--green)}.odot.off{background:var(--muted2)}
 .mem-info{flex:1;min-width:0}
@@ -250,7 +250,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .pop-banner-img{position:absolute;inset:0;object-fit:cover;width:100%;height:100%;opacity:.9}
 .pop-av-wrap{position:absolute;bottom:-24px;left:12px}
 .pop-av{width:56px;height:56px;border-radius:50%;border:4px solid var(--bg2);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-family:var(--vt);font-size:24px;color:var(--pale);overflow:hidden}
-.pop-av img{width:100%;height:100%;object-fit:cover}
+.pop-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .pop-body{padding:32px 14px 14px}
 .pop-name{font-family:var(--vt);font-size:20px;letter-spacing:2px;color:var(--pale)}
 .pop-tag{font-size:11px;color:var(--muted);margin-bottom:8px}
@@ -470,6 +470,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
       <button class="pop-admin-btn" onclick="adminMute()">MUTE</button>
       <button class="pop-admin-btn danger" onclick="adminBan()">BAN</button>
       <button class="pop-admin-btn" onclick="adminUnban()">UNBAN</button>
+      <button class="pop-admin-btn danger" onclick="adminDeleteAccount()" style="border-color:var(--red3);color:var(--red3)">DELETE ACCOUNT</button>
     </div>
   </div>
 </div>
@@ -546,6 +547,12 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
         <input class="wi2" id="dis-code" type="text" inputmode="numeric" maxlength="6" placeholder="000000" style="margin-bottom:14px"/>
         <button class="btn-save" style="background:transparent;border-color:var(--red2);color:var(--red2);width:auto;padding:8px 20px;font-size:15px;letter-spacing:2px" onclick="disable2FA()">DISABLE 2FA</button>
       </div>
+      <!-- Self-delete -->
+      <div style="border-top:1px solid var(--dim);margin-top:24px;padding-top:18px">
+        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--red2);margin-bottom:6px">DANGER ZONE</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6">Permanently delete your account. All your messages will be removed. This cannot be undone.</div>
+        <button class="btn-save" style="background:transparent;border-color:var(--red3);color:var(--red3);width:auto;padding:8px 20px;font-size:15px;letter-spacing:2px" onclick="openSelfDelete()">DELETE MY ACCOUNT</button>
+      </div>
     </div>
   </div>
 </div>
@@ -582,6 +589,21 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   <div class="modal-actions">
     <button class="btn-cancel" onclick="closeModal('addch-overlay')">CANCEL</button>
     <button class="btn-save" onclick="doAddCh()">CREATE</button>
+  </div>
+</div>
+</div>
+
+<!-- SELF DELETE MODAL -->
+<div class="overlay" id="self-delete-overlay" onclick="bgClose(event,'self-delete-overlay')">
+<div class="sm-modal">
+  <div class="modal-x" onclick="closeModal('self-delete-overlay')">✕</div>
+  <div class="sm-title" style="color:var(--red3)">DELETE ACCOUNT</div>
+  <div class="sm-sub">This is permanent. Your account and all messages will be erased from the Wired forever.</div>
+  <div class="fl2">Confirm your password</div>
+  <input class="wi2" id="self-delete-pwd" type="password" placeholder="your password" style="margin-bottom:18px"/>
+  <div class="modal-actions">
+    <button class="btn-cancel" onclick="closeModal('self-delete-overlay')">CANCEL</button>
+    <button class="btn-save" style="background:rgba(139,32,53,.3);border-color:var(--red3);color:var(--red3)" onclick="doSelfDelete()">CONFIRM DELETE</button>
   </div>
 </div>
 </div>
@@ -774,6 +796,15 @@ function handleWS(m){
     case 'user_update': allUsers[m.user.id]=m.user;if(ME&&m.user.id===ME.id){ME=m.user;renderFooter()}renderMembers();refreshMsgAvatars(m.user);break;
     case 'user_join': allUsers[m.user.id]=m.user;renderMembers();break;
     case 'user_banned': if(ME&&m.username===ME.username)doLogout();break;
+    case 'user_deleted':{
+      // Remove from local user list
+      if(allUsers[m.user_id]) delete allUsers[m.user_id];
+      onlineIds.delete(m.user_id);
+      renderMembers();
+      // If it was us, force logout
+      if(ME&&ME.id===m.user_id) doLogout();
+      break;
+    }
     case 'message':{
       const msg=m.message;
       if(!msgCache[msg.channel_id])msgCache[msg.channel_id]=[];
@@ -1095,6 +1126,31 @@ async function adminUnban(){
   if(d.ok){showToast(`${u.username} unbanned`);hidePop()}else showToast(d.error||'Failed');
 }
 
+async function adminDeleteAccount(){
+  const u=allUsers[popTarget];if(!u)return;
+  if(!confirm(`DELETE ${u.username}'s account permanently? This cannot be undone.`))return;
+  if(!confirm(`Are you absolutely sure? All messages will be erased.`))return;
+  const r=await fetch('/api/admin/delete-account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u.username})});
+  const d=await r.json();
+  if(d.ok){showToast(`${u.username} deleted from the Wired`);hidePop()}else showToast(d.error||'Failed');
+}
+
+function openSelfDelete(){
+  document.getElementById('self-delete-pwd').value='';
+  closeEdit();
+  document.getElementById('self-delete-overlay').classList.add('on');
+}
+
+async function doSelfDelete(){
+  const pwd=document.getElementById('self-delete-pwd').value;
+  if(!pwd){showToast('Enter your password');return}
+  if(!confirm('Last chance — delete your account forever?'))return;
+  const r=await fetch('/api/account/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pwd})});
+  const d=await r.json();
+  if(d.ok){closeModal('self-delete-overlay');doLogout();}
+  else showToast(d.error||'Failed to delete account');
+}
+
 // ══════════════════════════════════════════════════
 // LIGHTBOX
 // ══════════════════════════════════════════════════
@@ -1233,7 +1289,7 @@ fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{if(d&&d.user){ME=d.user;en
 // ══════════════════════════════════════════════════
 // GIF PICKER (Tenor API)
 // ══════════════════════════════════════════════════
-const TENOR_KEY = 'AIzaSyAyimkuYQYF_FXVALexPuGQctUWRURdCDY'; // public demo key
+// GIFs proxied through /api/gifs/* — key lives server-side
 const GIF_CATS = ['trending','anime','reaction','meme','lol','wow','sad','hype','love','facepalm'];
 let gifPickerOpen = false;
 let gifSearchTimer = null;
@@ -1277,13 +1333,14 @@ async function fetchGifs(q, isSearch){
   grid.innerHTML = '<div class="gif-loading">Searching the Wired...</div>';
   try{
     const endpoint = isSearch
-      ? `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(q)}&key=${TENOR_KEY}&limit=24&media_filter=gif,tinygif`
-      : `https://tenor.googleapis.com/v2/featured?key=${TENOR_KEY}&q=${encodeURIComponent(q)}&limit=24&media_filter=gif,tinygif`;
+      ? `/api/gifs/search?q=${encodeURIComponent(q)}&limit=24`
+      : `/api/gifs/featured?q=${encodeURIComponent(q)}&limit=24`;
     const r = await fetch(endpoint);
     const d = await r.json();
+    if(!r.ok) throw new Error(d.error||'Failed');
     renderGifs(d.results||[]);
   } catch(e){
-    grid.innerHTML = '<div class="gif-loading">Could not reach Tenor. Check connection.</div>';
+    grid.innerHTML = `<div class="gif-loading">GIFs unavailable: ${esc(e.message)}</div>`;
   }
 }
 

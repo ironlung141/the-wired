@@ -546,6 +546,83 @@ app.post('/api/admin/mute', authMW, adminMW, (req, res) => {
   res.json({ ok: true });
 });
 
+app.post('/api/admin/delete-account', authMW, adminMW, (req, res) => {
+  const { username } = req.body || {};
+  if (!username) return res.status(400).json({ error: 'Missing username' });
+  if (username.toLowerCase() === ADMIN_USER)
+    return res.status(403).json({ error: 'Cannot delete the admin account' });
+  const user = Q.userByName.get(username);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  // Delete sessions first (FK would block)
+  Q.delAllSess.run(user.id);
+  // Delete avatar/banner files
+  if (user.avatar) fs.unlink(path.join(UPLOAD_DIR, path.basename(user.avatar)), () => {});
+  if (user.banner) fs.unlink(path.join(UPLOAD_DIR, path.basename(user.banner)), () => {});
+  // Soft-delete all their messages (keep history readable as [deleted])
+  db.prepare("UPDATE messages SET deleted=1, content='[account deleted]', image_url=NULL WHERE author_id=?").run(user.id);
+  // Delete the user row (cascades sessions, totp_setup, login_pending)
+  db.prepare('DELETE FROM users WHERE id=?').run(user.id);
+
+  // Notify everyone
+  broadcast({ type: 'user_banned', username: user.username }); // kicks their WS
+  broadcast({ type: 'user_deleted', user_id: user.id, username: user.username });
+  res.json({ ok: true });
+});
+
+// Self-delete own account
+app.post('/api/account/delete', authMW, (req, res) => {
+  const { password } = req.body || {};
+  if (!password) return res.status(400).json({ error: 'Password required' });
+  if (!bcrypt.compareSync(String(password), req.user.pwd_hash))
+    return res.status(401).json({ error: 'Wrong password' });
+  if (req.user.username.toLowerCase() === ADMIN_USER)
+    return res.status(403).json({ error: 'Admin account cannot be self-deleted' });
+
+  const user = req.user;
+  Q.delAllSess.run(user.id);
+  if (user.avatar) fs.unlink(path.join(UPLOAD_DIR, path.basename(user.avatar)), () => {});
+  if (user.banner) fs.unlink(path.join(UPLOAD_DIR, path.basename(user.banner)), () => {});
+  db.prepare("UPDATE messages SET deleted=1, content='[account deleted]', image_url=NULL WHERE author_id=?").run(user.id);
+  db.prepare('DELETE FROM users WHERE id=?').run(user.id);
+  res.clearCookie('wt');
+  broadcast({ type: 'user_deleted', user_id: user.id, username: user.username });
+  res.json({ ok: true });
+});
+
+// ════════════════════════════════════════════════════════════════
+// TENOR GIF PROXY  (keeps API key server-side, avoids CORS issues)
+// ════════════════════════════════════════════════════════════════
+const TENOR_KEY = process.env.TENOR_KEY || 'AIzaSyC5BFbJN_GWfYITgRGm_MhX5ADKfV0QSQY';
+
+app.get('/api/gifs/search', authMW, async (req, res) => {
+  const { q, limit = 24 } = req.query;
+  if (!q) return res.status(400).json({ error: 'Missing q' });
+  try {
+    const url = `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(q)}&key=${TENOR_KEY}&limit=${limit}&media_filter=tinygif,gif&contentfilter=medium`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`Tenor ${r.status}`);
+    const d = await r.json();
+    res.json(d);
+  } catch (e) {
+    res.status(502).json({ error: 'GIF fetch failed: ' + e.message });
+  }
+});
+
+app.get('/api/gifs/featured', authMW, async (req, res) => {
+  const { q = 'trending', limit = 24 } = req.query;
+  try {
+    // Use search for categories since featured needs special setup
+    const url = `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(q)}&key=${TENOR_KEY}&limit=${limit}&media_filter=tinygif,gif&contentfilter=medium`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`Tenor ${r.status}`);
+    const d = await r.json();
+    res.json(d);
+  } catch (e) {
+    res.status(502).json({ error: 'GIF fetch failed: ' + e.message });
+  }
+});
+
 // ════════════════════════════════════════════════════════════════
 // WEBSOCKET
 // ════════════════════════════════════════════════════════════════
