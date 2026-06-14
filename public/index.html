@@ -326,6 +326,45 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .info-note{font-size:11px;color:var(--muted);margin-top:-8px;margin-bottom:14px;letter-spacing:.3px;line-height:1.6}
 .danger-zone{border-top:1px solid var(--dim);padding-top:16px;margin-top:8px}
 .danger-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--red2);margin-bottom:10px}
+
+/* ── EMOJI ── */
+.emoji{font-style:normal;font-size:1.15em;vertical-align:-0.1em;display:inline-block}
+/* emoji picker button */
+.emoji-btn{color:var(--muted);cursor:pointer;font-size:16px;transition:color .2s;user-select:none;line-height:1}
+.emoji-btn:hover{color:var(--pale)}
+.emoji-picker{position:fixed;bottom:70px;right:260px;width:320px;height:380px;background:var(--bg2);border:1px solid var(--dim2);z-index:700;display:none;flex-direction:column;box-shadow:0 -8px 40px rgba(0,0,0,.8)}
+.emoji-picker.on{display:flex}
+.emoji-search-wrap{padding:8px;border-bottom:1px solid var(--dim);flex-shrink:0}
+.emoji-search{width:100%;background:rgba(139,32,53,.06);border:1px solid var(--dim2);color:var(--pale);font-family:var(--mono);font-size:12px;padding:6px 10px;outline:none;letter-spacing:.5px}
+.emoji-search:focus{border-color:var(--red)}
+.emoji-search::placeholder{color:var(--muted2)}
+.emoji-grid{flex:1;overflow-y:auto;padding:6px;display:grid;grid-template-columns:repeat(8,1fr);gap:2px;align-content:start}
+.emoji-grid::-webkit-scrollbar{width:3px}
+.emoji-cell{display:flex;align-items:center;justify-content:center;height:36px;cursor:pointer;border-radius:3px;font-size:20px;transition:background .1s;border:1px solid transparent}
+.emoji-cell:hover{background:rgba(139,32,53,.2);border-color:var(--dim)}
+.emoji-cell[title]:hover::after{content:attr(title);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--dim2);color:var(--pale);font-size:10px;padding:2px 6px;white-space:nowrap;pointer-events:none;font-family:var(--mono);letter-spacing:.5px}
+/* ── AVATAR IMAGE UNIVERSAL FIX ──
+   All avatar containers use position:relative + overflow:hidden.
+   Images inside are absolutely positioned to truly fill and clip to the circle.
+   This fixes the cropped/square corners on all browsers. */
+.av-sm,.msg-av,.mem-av,.pop-av,.mention-item-av,.modal-av,.prev-av,.pop-av{
+  position:relative !important;
+  overflow:hidden !important;
+  border-radius:50% !important;
+  isolation:isolate;
+}
+.av-sm img,.msg-av img,.mem-av img,.pop-av img,.mention-item-av img,.modal-av img,.prev-av img{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+  border-radius:50% !important;
+  display:block !important;
+}
+/* modal-av is square-ish during hover overlay — keep it circular */
+.modal-av{ border-radius:50% !important; overflow:hidden !important; }
+.modal-av img{ position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; object-fit:cover !important; border-radius:50% !important; }
 </style>
 </head>
 <body>
@@ -438,6 +477,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
         <textarea class="msg-input" id="msg-input" placeholder="transmit to #general..." rows="1" spellcheck="false"></textarea>
         <div class="input-actions">
           <label class="img-upload-btn" title="Upload image">📎<input type="file" id="img-file" accept="image/*" style="display:none" onchange="uploadMsgImage(event)"/></label>
+          <span class="emoji-btn" title="Emoji" onclick="toggleEmojiPicker()">😊</span>
           <div class="gif-btn" title="Send a GIF" onclick="toggleGifPicker()">GIF</div>
           <button class="send-btn" onclick="sendMsg()" title="Send (Enter)">↗</button>
         </div>
@@ -626,6 +666,14 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 <!-- IMAGE LIGHTBOX -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <img id="lightbox-img" src="">
+</div>
+
+<!-- EMOJI PICKER -->
+<div class="emoji-picker" id="emoji-picker">
+  <div class="emoji-search-wrap">
+    <input class="emoji-search" id="emoji-search" type="text" placeholder="search emoji..." autocomplete="off" oninput="filterEmoji(this.value)"/>
+  </div>
+  <div class="emoji-grid" id="emoji-grid"></div>
 </div>
 
 <!-- GIF PICKER -->
@@ -1287,6 +1335,65 @@ async function disable2FA(){
 fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{if(d&&d.user){ME=d.user;enterApp()}}).catch(()=>{});
 
 // ══════════════════════════════════════════════════
+// EMOJI PICKER
+// ══════════════════════════════════════════════════
+let emojiPickerOpen = false;
+
+function buildEmojiGrid(filter=''){
+  const grid = document.getElementById('emoji-grid');
+  grid.innerHTML = '';
+  const lower = filter.toLowerCase();
+  const entries = Object.entries(EMOJI_MAP).filter(([k,v])=> !filter || k.includes(lower));
+  if(!entries.length){
+    grid.innerHTML = '<div style="grid-column:1/-1;padding:20px;text-align:center;color:var(--muted);font-size:11px">No results</div>';
+    return;
+  }
+  entries.forEach(([code, emoji]) => {
+    const d = document.createElement('div');
+    d.className = 'emoji-cell';
+    d.textContent = emoji;
+    d.title = ':' + code + ':';
+    d.onclick = () => insertEmojiToInput(':' + code + ':');
+    grid.appendChild(d);
+  });
+}
+
+function toggleEmojiPicker(){
+  emojiPickerOpen = !emojiPickerOpen;
+  const p = document.getElementById('emoji-picker');
+  p.classList.toggle('on', emojiPickerOpen);
+  if(emojiPickerOpen){
+    // close gif picker if open
+    closeGifPicker();
+    document.getElementById('emoji-search').value = '';
+    buildEmojiGrid();
+    setTimeout(()=>document.getElementById('emoji-search').focus(), 50);
+  }
+}
+
+function closeEmojiPicker(){ emojiPickerOpen=false; document.getElementById('emoji-picker').classList.remove('on'); }
+
+function filterEmoji(val){ buildEmojiGrid(val.trim()); }
+
+function insertEmojiToInput(shortcode){
+  const inp = document.getElementById('msg-input');
+  const pos = inp.selectionStart;
+  const before = inp.value.slice(0, pos);
+  const after  = inp.value.slice(inp.selectionEnd);
+  inp.value = before + shortcode + after;
+  const newPos = pos + shortcode.length;
+  inp.setSelectionRange(newPos, newPos);
+  inp.focus();
+  inp.style.height = '22px';
+  inp.style.height = Math.min(inp.scrollHeight, 160) + 'px';
+  closeEmojiPicker();
+}
+
+document.addEventListener('click', e => {
+  if(emojiPickerOpen && !e.target.closest('#emoji-picker') && !e.target.closest('.emoji-btn')) closeEmojiPicker();
+});
+
+// ══════════════════════════════════════════════════
 // GIF PICKER (Tenor API)
 // ══════════════════════════════════════════════════
 // GIFs proxied through /api/gifs/* — key lives server-side
@@ -1313,6 +1420,7 @@ function toggleGifPicker(){
   const p = document.getElementById('gif-picker');
   p.classList.toggle('on', gifPickerOpen);
   if(gifPickerOpen){
+    closeEmojiPicker();
     document.getElementById('gif-search').value='';
     document.getElementById('gif-grid').innerHTML='<div class="gif-loading">Type to search or pick a category</div>';
     fetchGifs('trending', false);
@@ -1455,10 +1563,69 @@ document.getElementById('msg-input').addEventListener('input', function(){
 });
 
 // Parse mentions in message content for display
+// ══════════════════════════════════════════════════
+// EMOJI — :shortcode: → actual emoji
+// ══════════════════════════════════════════════════
+const EMOJI_MAP = {
+  // faces
+  sob:'😭',cry:'😢',smile:'😊',grin:'😁',laugh:'😂',lol:'😂',joy:'😂',
+  rofl:'🤣',wink:'😉',blush:'😊',heart_eyes:'😍',kissing:'😗',
+  thinking:'🤔',confused:'😕',neutral:'😐',expressionless:'😑',
+  unamused:'😒',smirk:'😏',sunglasses:'😎',nerd:'🤓',
+  pleading:'🥺',yawn:'🥱',hushed:'😯',surprised:'😲',
+  scream:'😱',fear:'😨',cold_sweat:'😰',sweat:'😓',
+  pensive:'😔',disappointed:'😞',worried:'😟',anguished:'😧',
+  angry:'😠',rage:'😡',skull:'💀',dead:'💀',dizzy_face:'😵',
+  exploding_head:'🤯',flushed:'😳',sleepy:'😪',sleeping:'😴',
+  stuck_out_tongue:'😛',zany:'🤪',monocle:'🧐',clown:'🤡',
+  alien:'👽',robot:'🤖',ghost:'👻',imp:'😈',smiling_imp:'😈',
+  100:'💯',ok:'👌',ok_hand:'👌',thumbsup:'👍',thumbsdown:'👎',
+  '+1':'👍','-1':'👎',wave:'👋',clap:'👏',pray:'🙏',
+  eyes:'👀',eye:'👁️',lips:'👄',brain:'🧠',
+  // hearts
+  heart:'❤️',red_heart:'❤️',orange_heart:'🧡',yellow_heart:'💛',
+  green_heart:'💚',blue_heart:'💙',purple_heart:'💜',black_heart:'🖤',
+  broken_heart:'💔',sparkling_heart:'💖',heartpulse:'💗',
+  // symbols
+  fire:'🔥',sparkles:'✨',star:'⭐',star2:'🌟',zap:'⚡',
+  boom:'💥',collision:'💥',wave_:'🌊',moon:'🌙',sun:'☀️',
+  rainbow:'🌈',snowflake:'❄️',umbrella:'☂️',
+  // objects
+  computer:'💻',phone:'📱',tv:'📺',radio:'📻',floppy:'💾',
+  cd:'💿',bulb:'💡',lock:'🔒',key:'🗝️',link:'🔗',
+  warning:'⚠️',no_entry:'⛔',x:'❌',check:'✅',
+  question:'❓',exclamation:'❗',
+  // animals
+  cat:'🐱',dog:'🐶',rabbit:'🐰',fox:'🦊',bear:'🐻',
+  // wired specific
+  lain:'👁️',wired:'🌐',navi:'💻',protocol:'📡',
+  // hands/people  
+  person:'🧍',woman:'👩',man:'👨',child:'🧒',
+  // misc
+  tada:'🎉',party:'🎊',gift:'🎁',cake:'🎂',
+  music:'🎵',notes:'🎶',headphones:'🎧',
+  pin:'📌',bookmark:'🔖',memo:'📝',pencil:'✏️',
+  trash:'🗑️',hammer:'🔨',wrench:'🔧',
+  // text faces
+  shrug:'¯\\_(ツ)_/¯',tableflip:'(╯°□°）╯︵ ┻━┻',
+  unflip:'┬─┬ノ( º _ ºノ)',
+};
+
+function parseEmoji(text){
+  return text.replace(/:([a-zA-Z0-9_+\-]+):/g, (match, code) => {
+    const e = EMOJI_MAP[code.toLowerCase()];
+    return e ? `<span class="emoji" title="${match}">${e}</span>` : match;
+  });
+}
+
 function renderContent(text){
   if(!text) return '';
-  // linkify URLs
-  let out = esc(text).replace(/(https?:\/\/[^\s<>"]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
+  // escape HTML first
+  let out = esc(text);
+  // linkify URLs (before other transforms)
+  out = out.replace(/(https?:\/\/[^\s<>"]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
+  // render :emoji: shortcodes
+  out = parseEmoji(out);
   // render @mentions
   out = out.replace(/@([a-z0-9_\-.]+)/gi, (match, uname) => {
     const u = Object.values(allUsers).find(x=>x.username.toLowerCase()===uname.toLowerCase());
