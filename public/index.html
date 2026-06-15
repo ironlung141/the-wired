@@ -89,7 +89,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .chi:hover .unread{display:none}
 .chi .del-ch:hover{color:var(--red3)}
 .sb-foot{margin-top:auto;padding:8px 10px;border-top:1px solid var(--dim);background:rgba(7,4,9,.75);display:flex;align-items:center;gap:8px;flex-shrink:0}
-.av-sm{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--dim);display:flex;align-items:center;justify-content:center;font-family:var(--vt);font-size:16px;color:var(--pale);cursor:pointer;flex-shrink:0;overflow:hidden;transition:border-color .2s}
+.av-sm{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--dim);font-family:var(--vt);font-size:16px;color:var(--pale);cursor:pointer;flex-shrink:0;overflow:hidden;transition:border-color .2s;position:relative;display:block}
 .av-sm:hover{border-color:var(--red)}
 .av-sm img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .foot-info{flex:1;min-width:0;cursor:pointer}
@@ -113,7 +113,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .msg-wrap{display:flex;gap:14px;padding:2px 16px;transition:background .1s;flex-shrink:0;position:relative}
 .msg-wrap:hover{background:rgba(255,255,255,.016)}
 .msg-wrap.first-in-group{padding-top:10px}
-.msg-av{width:38px;height:38px;border-radius:50%;background:var(--bg3);border:1px solid var(--dim);display:flex;align-items:center;justify-content:center;font-family:var(--vt);font-size:17px;color:var(--pale);flex-shrink:0;overflow:hidden;cursor:pointer;transition:border-color .2s;align-self:flex-start;margin-top:2px}
+.msg-av{width:38px;height:38px;border-radius:50%;background:var(--bg3);border:1px solid var(--dim);font-family:var(--vt);font-size:17px;color:var(--pale);flex-shrink:0;overflow:hidden;cursor:pointer;transition:border-color .2s;align-self:flex-start;margin-top:2px;position:relative;display:block}
 .msg-av:hover{border-color:var(--red)}
 .msg-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .msg-av-ghost{width:38px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end;padding-right:8px}
@@ -211,7 +211,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .mention-popup.on{display:flex}
 .mention-item{display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;transition:background .1s}
 .mention-item:hover,.mention-item.sel{background:rgba(139,32,53,.15)}
-.mention-item-av{width:26px;height:26px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-family:var(--vt);font-size:12px;color:var(--pale);flex-shrink:0;overflow:hidden}
+.mention-item-av{width:26px;height:26px;border-radius:50%;background:var(--bg3);font-family:var(--vt);font-size:12px;color:var(--pale);flex-shrink:0;overflow:hidden;position:relative;display:block}
 .mention-item-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .mention-item-name{font-size:12px;color:var(--pale);letter-spacing:.3px}
 .mention-item-tag{font-size:10px;color:var(--muted)}
@@ -232,9 +232,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .mem-sec:first-child{margin-top:0}
 .mem-item{display:flex;align-items:center;gap:8px;padding:5px 12px;cursor:pointer;border-radius:3px;margin:1px 6px;transition:background .15s}
 .mem-item:hover{background:rgba(139,32,53,.1)}
-.mem-av{width:32px;height:32px;border-radius:50%;background:var(--bg3);border:1px solid var(--dim);display:flex;align-items:center;justify-content:center;font-family:var(--vt);font-size:14px;color:var(--pale);flex-shrink:0;overflow:hidden;position:relative;border-radius:50%}
+.mem-av{width:32px;height:32px;border-radius:50%;background:var(--bg3);border:1px solid var(--dim);font-family:var(--vt);font-size:14px;color:var(--pale);flex-shrink:0;overflow:hidden;position:relative}
 .mem-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
-.odot{position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--bg2)}
+.odot{position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--bg2);z-index:2}
 .odot.on{background:var(--green)}.odot.off{background:var(--muted2)}
 .mem-info{flex:1;min-width:0}
 .mem-name{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -246,12 +246,11 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 /* ── PROFILE POPUP ── */
 .pop{position:fixed;background:var(--bg2);border:1px solid var(--dim2);width:290px;z-index:600;box-shadow:0 8px 40px rgba(0,0,0,.85);display:none;overflow:hidden}
 .pop.on{display:block}
-.pop-banner{height:72px;position:relative;overflow:hidden;background:var(--bg3)}
+.pop-banner{height:72px;position:relative;background:var(--bg3);border-radius:2px 2px 0 0;overflow:hidden}
 .pop-banner-img{position:absolute;inset:0;object-fit:cover;width:100%;height:100%;opacity:.9}
-.pop-av-wrap{position:absolute;bottom:-24px;left:12px}
-.pop-av{width:56px;height:56px;border-radius:50%;border:4px solid var(--bg2);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-family:var(--vt);font-size:24px;color:var(--pale);overflow:hidden}
+.pop-av{width:56px;height:56px;border-radius:50%;background:var(--bg3);font-family:var(--vt);font-size:24px;color:var(--pale)}
 .pop-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
-.pop-body{padding:32px 14px 14px}
+.pop-body{padding:34px 14px 14px}
 .pop-name{font-family:var(--vt);font-size:20px;letter-spacing:2px;color:var(--pale)}
 .pop-tag{font-size:11px;color:var(--muted);margin-bottom:8px}
 .pop-stat-row{display:flex;align-items:center;gap:5px;margin-bottom:4px}
@@ -327,6 +326,20 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .danger-zone{border-top:1px solid var(--dim);padding-top:16px;margin-top:8px}
 .danger-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--red2);margin-bottom:10px}
 
+/* ── REACTIONS ── */
+.reaction{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border:1px solid var(--dim2);border-radius:12px;cursor:pointer;font-size:13px;transition:all .15s;background:rgba(139,32,53,.05);user-select:none}
+.reaction:hover{border-color:var(--red);background:rgba(139,32,53,.15)}
+.reaction.me{border-color:var(--red);background:rgba(139,32,53,.2);color:var(--pale)}
+.reaction-count{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.reaction.me .reaction-count{color:var(--pale)}
+.reaction-add{display:inline-flex;align-items:center;justify-content:center;width:26px;height:22px;border:1px solid var(--dim);border-radius:12px;cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s;opacity:0;background:transparent}
+.msg-wrap:hover .reaction-add,.msg-reactions:not(:empty)~.reaction-add{opacity:1}
+.msg-reactions:not(:empty) .reaction-add{opacity:1}
+/* reaction picker (small emoji grid on hover) */
+.react-picker.on{display:flex}
+.react-cell{font-size:18px;cursor:pointer;padding:3px;border-radius:3px;transition:background .1s;border:1px solid transparent}
+.react-cell:hover{background:rgba(139,32,53,.2);border-color:var(--dim)}
+
 /* ── EMOJI ── */
 .emoji{font-style:normal;font-size:1.15em;vertical-align:-0.1em;display:inline-block}
 /* emoji picker button */
@@ -343,15 +356,30 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .emoji-cell{display:flex;align-items:center;justify-content:center;height:36px;cursor:pointer;border-radius:3px;font-size:20px;transition:background .1s;border:1px solid transparent}
 .emoji-cell:hover{background:rgba(139,32,53,.2);border-color:var(--dim)}
 .emoji-cell[title]:hover::after{content:attr(title);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--dim2);color:var(--pale);font-size:10px;padding:2px 6px;white-space:nowrap;pointer-events:none;font-family:var(--mono);letter-spacing:.5px}
-/* ── AVATAR IMAGE UNIVERSAL FIX ──
-   All avatar containers use position:relative + overflow:hidden.
-   Images inside are absolutely positioned to truly fill and clip to the circle.
-   This fixes the cropped/square corners on all browsers. */
-.av-sm,.msg-av,.mem-av,.pop-av,.mention-item-av,.modal-av,.prev-av,.pop-av{
+/* ── REACTIONS ── */
+.msg-reactions{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:4px}
+.reaction{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;background:rgba(139,32,53,.1);
+  border:1px solid var(--dim2);border-radius:10px;cursor:pointer;transition:all .15s;user-select:none;
+  font-size:13px;color:var(--text);min-height:24px}
+.reaction:hover{background:rgba(139,32,53,.22);border-color:var(--red)}
+.reaction.mine{background:rgba(139,32,53,.25);border-color:var(--red)}
+.reaction.mine:hover{background:rgba(139,32,53,.38)}
+.reaction-count{font-size:11px;color:var(--muted);font-family:var(--mono);margin-left:2px}
+.reaction-add{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;
+  background:transparent;border:1px dashed var(--dim2);border-radius:10px;cursor:pointer;
+  font-size:14px;color:var(--muted);transition:all .15s;opacity:0;line-height:1}
+.msg-wrap:hover .reaction-add,.msg-reactions .reaction-add{opacity:1}
+.reaction-add:hover{border-color:var(--red);color:var(--pale);background:rgba(139,32,53,.1)}
+
+/* ══ AVATAR FIX — single source of truth ══
+   Every avatar container: block, position:relative, border-radius:50%, overflow:hidden.
+   Every avatar img: absolute fill. No flex, no flex children, no z-index fights. */
+.av-sm,.msg-av,.mem-av,.pop-av,.mention-item-av,.modal-av,.prev-av{
+  display:block !important;
   position:relative !important;
   overflow:hidden !important;
   border-radius:50% !important;
-  isolation:isolate;
+  flex-shrink:0;
 }
 .av-sm img,.msg-av img,.mem-av img,.pop-av img,.mention-item-av img,.modal-av img,.prev-av img{
   position:absolute !important;
@@ -359,12 +387,11 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   width:100% !important;
   height:100% !important;
   object-fit:cover !important;
-  border-radius:50% !important;
+  border-radius:0 !important; /* parent clips — no need on child */
   display:block !important;
+  z-index:1;
 }
-/* modal-av is square-ish during hover overlay — keep it circular */
-.modal-av{ border-radius:50% !important; overflow:hidden !important; }
-.modal-av img{ position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; object-fit:cover !important; border-radius:50% !important; }
+/* letter fallback sits inside via avInner span */
 </style>
 </head>
 <body>
@@ -496,7 +523,10 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 <div class="pop" id="pop">
   <div class="pop-banner" id="pop-banner">
     <img class="pop-banner-img" id="pop-banner-img" src="" style="display:none">
-    <div class="pop-av-wrap"><div class="pop-av" id="pop-av"></div></div>
+  </div>
+  <!-- avatar OUTSIDE banner so overflow:hidden doesn't clip it -->
+  <div style="position:relative;height:0;padding-left:12px">
+    <div class="pop-av" id="pop-av" style="position:absolute;top:-28px;left:12px;width:56px;height:56px;border:4px solid var(--bg2);z-index:5"></div>
   </div>
   <div class="pop-body">
     <div class="pop-name" id="pop-name"></div>
@@ -667,6 +697,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <img id="lightbox-img" src="">
 </div>
+
+<!-- REACTION PICKER (quick emoji pick on message hover) -->
+<div class="react-picker" id="react-picker"></div>
 
 <!-- EMOJI PICKER -->
 <div class="emoji-picker" id="emoji-picker">
@@ -862,6 +895,24 @@ function handleWS(m){
       clearTypingUser(msg.channel_id,msg.author_id);
       break;
     }
+    case 'reaction_update':{
+      // Update cache
+      if(msgCache[m.channel_id]){
+        const idx=msgCache[m.channel_id].findIndex(x=>x.id===m.message_id);
+        if(idx>=0) msgCache[m.channel_id][idx].reactions=m.reactions;
+      }
+      // Re-render just the reactions row in the DOM
+      const el=document.querySelector(`.msg-wrap[data-mid="${CSS.escape(m.message_id)}"]`);
+      if(el){
+        const newHtml=buildReactionsHtml({id:m.message_id,reactions:m.reactions});
+        const tmp=document.createElement('div');tmp.innerHTML=newHtml;
+        const newNode=tmp.firstChild;
+        const existing=el.querySelector('.msg-reactions');
+        if(existing&&newNode) existing.replaceWith(newNode);
+        else if(!existing&&newNode){ const body=el.querySelector('.msg-body');if(body)body.appendChild(newNode); }
+      }
+      break;
+    }
     case 'message_delete':{
       if(msgCache[m.channel_id]){const idx=msgCache[m.channel_id].findIndex(x=>x.id===m.message_id);if(idx>=0){msgCache[m.channel_id][idx].deleted=true;msgCache[m.channel_id][idx].content='[message deleted]';msgCache[m.channel_id][idx].image_url=null}}
       const el=document.querySelector(`.msg-wrap[data-mid="${CSS.escape(m.message_id)}"]`);
@@ -961,10 +1012,17 @@ function buildMsgEl(msg,grouped){
   const u=allUsers[msg.author_id]||{};
   const avatar=msg.avatar||u.avatar||null;
   const display=msg.display||u.display||msg.username||'unknown';
-  const avHtml=avatar?`<img src="${esc(avatar)}">`:(display[0]||'?').toUpperCase();
+  const avHtml=avInnerFromMsg(msg);
   const canDelete=ME&&(msg.author_id===ME.id||isAdmin())&&!msg.deleted;
   const canReply=!msg.deleted;
-  const actions=`<div class="msg-actions">${canReply?`<div class="msg-action-btn" title="Reply" onclick="startReply('${esc(msg.id)}','${esc(display)}','${esc((msg.content||'').slice(0,60).replace(/'/g,"\\'"))}')">↩</div>`:''}${canDelete?`<div class="msg-action-btn del" title="Delete" onclick="deleteMsg('${esc(msg.id)}')">🗑</div>`:''}</div>`;
+  const safeId=esc(msg.id);
+  const safeDisplay=esc(display);
+  const safeContent=esc((msg.content||'').slice(0,60)).replace(/'/g,"&#39;");
+  const actions=`<div class="msg-actions">
+    <div class="msg-action-btn" title="Add Reaction" onclick="openReactPicker('${safeId}',event)">😊</div>
+    ${canReply?`<div class="msg-action-btn" title="Reply" onclick="startReply('${safeId}','${safeDisplay}','${safeContent}')">↩</div>`:''}
+    ${canDelete?`<div class="msg-action-btn del" title="Delete" onclick="deleteMsg('${safeId}')">🗑</div>`:''}
+  </div>`;
 
   let replyHtml='';
   if(msg.reply_to_id&&msg.reply_display){
@@ -977,17 +1035,17 @@ function buildMsgEl(msg,grouped){
 
   const imgHtml=msg.image_url&&!msg.deleted?`<img class="msg-img" src="${esc(msg.image_url)}" onclick="openLightbox('${esc(msg.image_url)}')" loading="lazy">`:'';
   const textClass=msg.deleted?'msg-text deleted':'msg-text';
-  const textContent=msg.deleted?'[message deleted]':linkify(esc(msg.content||''));
+  const textContent=msg.deleted?'[message deleted]':renderContent(msg.content||'');
   const adminMark=isAdmin()&&display.toLowerCase()===ADMIN_USERNAME?'admin-name':'';
-
+  const reactionsHtml = buildReactionsHtml(msg);
   if(grouped){
     d.innerHTML=`<div class="msg-av-ghost"><span class="ts-hover">${ts2time(msg.created)}</span></div>
-      <div class="msg-body">${replyHtml}<div class="${textClass}">${textContent}</div>${imgHtml}</div>${actions}`;
+      <div class="msg-body">${replyHtml}<div class="${textClass}">${textContent}</div>${imgHtml}${reactionsHtml}</div>${actions}`;
   } else {
     d.innerHTML=`<div class="msg-av" onclick="showPopById('${esc(msg.author_id)}',event)">${avHtml}</div>
       <div class="msg-body">
         <div class="msg-meta"><span class="msg-auth ${adminMark}" onclick="showPopById('${esc(msg.author_id)}',event)">${esc(display)}</span><span class="msg-time">${ts2time(msg.created)}</span></div>
-        ${replyHtml}<div class="${textClass}">${textContent}</div>${imgHtml}
+        ${replyHtml}<div class="${textClass}">${textContent}</div>${imgHtml}${reactionsHtml}
       </div>${actions}`;
   }
   return d;
@@ -997,7 +1055,7 @@ let ADMIN_USERNAME='lain';
 
 function refreshMsgAvatars(user){
   document.querySelectorAll(`.msg-wrap[data-uid="${CSS.escape(user.id)}"]`).forEach(el=>{
-    const av=el.querySelector('.msg-av');if(av)av.innerHTML=user.avatar?`<img src="${esc(user.avatar)}">`:(user.display||user.username||'?')[0].toUpperCase();
+    const av=el.querySelector('.msg-av');if(av)av.innerHTML=avInner(user);
     const auth=el.querySelector('.msg-auth');if(auth)auth.textContent=user.display||user.username||'unknown';
   });
 }
@@ -1095,7 +1153,7 @@ function renderMembers(){
   else{offLbl.style.display='none';offDiv.innerHTML=''}
 }
 function memHtml(u,online){
-  const av=u.avatar?`<img src="${esc(u.avatar)}">`:(u.display||u.username||'?')[0].toUpperCase();
+  const av=avInner(u);
   const isMe=ME&&u.id===ME.id;
   const isBanned=u.is_banned;
   const muted=isMuted(u);
@@ -1112,12 +1170,26 @@ function memHtml(u,online){
 // ══════════════════════════════════════════════════
 // FOOTER
 // ══════════════════════════════════════════════════
+// ── Avatar render helper ──
+// Always produces a correctly-filled circular avatar
+function avInner(user){
+  if(user && user.avatar)
+    return `<img src="${esc(user.avatar)}" alt="">`;
+  const letter = user ? (user.display||user.username||'?')[0].toUpperCase() : '?';
+  return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--vt);font-size:inherit;color:var(--pale)">${letter}</span>`;
+}
+function avInnerFromMsg(msg){
+  if(msg.avatar)
+    return `<img src="${esc(msg.avatar)}" alt="">`;
+  const letter = (msg.display||msg.username||'?')[0].toUpperCase();
+  return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--vt);font-size:inherit;color:var(--pale)">${letter}</span>`;
+}
+
 function renderFooter(){
   if(!ME)return;
   document.getElementById('foot-name').textContent=ME.display||ME.username;
   document.getElementById('foot-stat').textContent=ME.status||'connected to the wired';
-  const av=document.getElementById('foot-av');
-  av.innerHTML=ME.avatar?`<img src="${esc(ME.avatar)}">`:(ME.display||ME.username||'?')[0].toUpperCase();
+  document.getElementById('foot-av').innerHTML=avInner(ME);
 }
 
 // ══════════════════════════════════════════════════
@@ -1135,8 +1207,7 @@ function showPopById(uid,e){
   if(u.banner){banner.style.background='var(--bg3)';bannerImg.src=u.banner;bannerImg.style.display=''}
   else{banner.style.background=u.color||'#2a0d15';bannerImg.style.display='none'}
   document.getElementById('pop-dot').className='pop-dot '+(onlineIds.has(uid)?'on':'off');
-  const av=document.getElementById('pop-av');
-  av.innerHTML=u.avatar?`<img src="${esc(u.avatar)}">`:(u.display||u.username||'?')[0].toUpperCase();
+  document.getElementById('pop-av').innerHTML=avInner(u);
   // admin actions
   const adminActs=document.getElementById('pop-admin-actions');
   if(isAdmin()&&uid!==ME.id){adminActs.style.display='flex'}else adminActs.style.display='none';
@@ -1225,9 +1296,7 @@ function openEdit(){
   else{bannerBg.style.background=bg;bannerImg.style.display='none'}
   pendingBanner=null;pendingAvatar=null;
   const av=document.getElementById('edit-av');
-  av.innerHTML=(ME.avatar
-    ? `<img src="${esc(ME.avatar)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
-    : `<span>${(ME.display||ME.username||'?')[0].toUpperCase()}</span>`)
+  av.innerHTML=(ME.avatar ? `<img src="${esc(ME.avatar)}" alt="">` : avInner(ME))
     +'<div class="av-ov">Change<br>Avatar</div>';
   // security tab
   const enabled=ME.totp_enabled;
@@ -1264,7 +1333,7 @@ function updatePreview(){
   else{pb.style.background=sel?sel.dataset.c:(ME?.color||COLORS[0]);pbi.style.display='none'}
   const pav=document.getElementById('prev-av');
   const avSrc=pendingAvatar||ME?.avatar||null;
-  pav.innerHTML=avSrc?`<img src="${esc(avSrc)}">`:(dn[0]||'?').toUpperCase();
+  pav.innerHTML=avSrc?`<img src="${esc(avSrc)}" alt="">`:avInner(ME);
 }
 ['e-dn','e-bio','e-stat'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{if(document.getElementById('ef-prev').classList.contains('on'))updatePreview()}));
 
@@ -1286,7 +1355,7 @@ function uploadAv(e){
     if(d.ok){
       pendingAvatar=d.avatar;ME.avatar=d.avatar;
       const av=document.getElementById('edit-av');
-      av.innerHTML=`<img src="${esc(d.avatar)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"><div class="av-ov">Change<br>Avatar</div>`;
+      av.innerHTML=`<img src="${esc(d.avatar)}" alt=""><div class="av-ov">Change<br>Avatar</div>`;
       renderFooter();renderMembers();updatePreview();showToast('Avatar updated.');
     }else showToast('Upload failed');
   }).catch(()=>showToast('Upload failed'));
@@ -1327,6 +1396,48 @@ async function disable2FA(){
     const d=await r.json();
     if(d.ok){if(d.user)ME=d.user;showToast('2FA disabled');sv('dis-pwd','');sv('dis-code','');openEdit()}else showToast(d.error||'Failed')
   }catch{showToast('Failed')}
+}
+
+// ══════════════════════════════════════════════════
+// REACTIONS
+// ══════════════════════════════════════════════════
+const QUICK_REACTS = ['👍','👎','❤️','😂','😮','😢','🔥','💀','👀','✅','⚡','💯'];
+
+function buildReactionsHtml(msg){
+  const reactions = msg.reactions||[];
+  const addBtn = `<span class="reaction-add" onclick="openReactPicker('${esc(msg.id)}',event)" title="Add reaction">😄</span>`;
+  if(!reactions.length) return `<div class="msg-reactions" data-msgid="${esc(msg.id)}">${addBtn}</div>`;
+  const pills = reactions.map(r => {
+    const mine = ME && r.users && Array.isArray(r.users) && r.users.includes(ME.username);
+    const names = (r.displays||r.users||[]).join(', ');
+    return `<span class="reaction${mine?' mine':''}" title="${esc(names)}" onclick="toggleReaction('${esc(msg.id)}','${esc(r.emoji)}')">${r.emoji}<span class="reaction-count">${r.count}</span></span>`;
+  }).join('');
+  return `<div class="msg-reactions" data-msgid="${esc(msg.id)}">${pills}${addBtn}</div>`;
+}
+
+let reactPickerMsgId = null;
+function openReactPicker(msgId, e){
+  reactPickerMsgId = msgId;
+  const p = document.getElementById('react-picker');
+  p.innerHTML = QUICK_REACTS.map(em =>
+    `<div class="react-option" onclick="toggleReaction('${msgId}','${em}')" title="${em}">${em}</div>`
+  ).join('');
+  p.classList.add('on');
+  // Position near cursor
+  const x = Math.min(e.clientX, window.innerWidth - 230);
+  const y = Math.max(e.clientY - 120, 8);
+  p.style.left = x + 'px';
+  p.style.top = y + 'px';
+  e.stopPropagation();
+}
+function closeReactPicker(){ document.getElementById('react-picker').classList.remove('on'); reactPickerMsgId=null; }
+document.addEventListener('click', e => { if(!e.target.closest('#react-picker')&&!e.target.closest('.reaction-add')&&!e.target.closest('[onclick*="openReactPicker"]')) closeReactPicker(); });
+
+async function toggleReaction(msgId, emoji){
+  closeReactPicker();
+  try{
+    await fetch(`/api/messages/${msgId}/react`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({emoji})});
+  }catch(e){ showToast('Reaction failed'); }
 }
 
 // ══════════════════════════════════════════════════

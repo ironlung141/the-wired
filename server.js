@@ -121,7 +121,25 @@ db.exec(`
     expires INTEGER NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS reactions (
+    id         TEXT PRIMARY KEY,
+    message_id TEXT NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+    user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    emoji      TEXT NOT NULL,
+    created    INTEGER DEFAULT (unixepoch()),
+    UNIQUE(message_id, user_id, emoji)
+  );
   CREATE INDEX IF NOT EXISTS idx_msg_ch ON messages(channel_id, created);
+  CREATE INDEX IF NOT EXISTS idx_react_msg ON reactions(message_id);
+
+  CREATE TABLE IF NOT EXISTS reactions (
+    message_id TEXT NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+    user_id    TEXT NOT NULL REFERENCES users(id)    ON DELETE CASCADE,
+    emoji      TEXT NOT NULL,
+    created    INTEGER DEFAULT (unixepoch()),
+    PRIMARY KEY (message_id, user_id, emoji)
+  );
+  CREATE INDEX IF NOT EXISTS idx_react_msg ON reactions(message_id);
   CREATE INDEX IF NOT EXISTS idx_sess_u ON sessions(user_id);
 `);
 
@@ -193,9 +211,33 @@ const Q = {
     WHERE m.channel_id=? AND m.deleted=0
     ORDER BY m.created DESC LIMIT 100
   `),
+  getReactionsForChannel: db.prepare(`SELECT message_id, emoji, user_id FROM reactions WHERE message_id IN (SELECT id FROM messages WHERE channel_id=?)`),
   getMsgById:    db.prepare('SELECT * FROM messages WHERE id=?'),
   insertMsg:     db.prepare('INSERT INTO messages (id,channel_id,author_id,content,image_url,reply_to_id) VALUES (?,?,?,?,?,?)'),
   softDeleteMsg: db.prepare("UPDATE messages SET deleted=1, content='[message deleted]', image_url=NULL WHERE id=?"),
+  getReactions: db.prepare(`
+    SELECT r.emoji, r.user_id, u.display, u.username
+    FROM reactions r JOIN users u ON r.user_id=u.id
+    WHERE r.message_id=?
+  `),
+  getMsgReactions: db.prepare(`
+    SELECT emoji, COUNT(*) as count,
+           GROUP_CONCAT(u.username) as usernames,
+           GROUP_CONCAT(u.display) as displays
+    FROM reactions r JOIN users u ON r.user_id=u.id
+    WHERE r.message_id=?
+    GROUP BY emoji
+    ORDER BY count DESC, MIN(r.created)
+  `),
+  addReaction:    db.prepare('INSERT OR IGNORE INTO reactions (id,message_id,user_id,emoji) VALUES (?,?,?,?)'),
+  removeReaction: db.prepare('DELETE FROM reactions WHERE message_id=? AND user_id=? AND emoji=?'),
+  userReacted:    db.prepare('SELECT id FROM reactions WHERE message_id=? AND user_id=? AND emoji=?'),
+
+  // Reactions
+  addReaction:    db.prepare('INSERT OR IGNORE INTO reactions (message_id,user_id,emoji) VALUES (?,?,?)'),
+  removeReaction: db.prepare('DELETE FROM reactions WHERE message_id=? AND user_id=? AND emoji=?'),
+  getReactions:   db.prepare('SELECT emoji, COUNT(*) as count, GROUP_CONCAT(user_id) as user_ids FROM reactions WHERE message_id=? GROUP BY emoji ORDER BY created'),
+  getMsgReactions:db.prepare(`SELECT r.emoji, r.user_id, u.display, u.username FROM reactions r JOIN users u ON r.user_id=u.id WHERE r.message_id=? ORDER BY r.created`),
 
   // 2FA setup (while user is confirming the code)
   setTotpSetup:  db.prepare('INSERT OR REPLACE INTO totp_setup (user_id,secret,expires) VALUES (?,?,?)'),
@@ -504,7 +546,12 @@ app.delete('/api/servers/:sid/channels/:cid', authMW, (req, res) => {
 // MESSAGES
 // ════════════════════════════════════════════════════════════════
 app.get('/api/channels/:cid/messages', authMW, (req, res) => {
-  res.json({ messages: Q.getMsgs.all(req.params.cid).reverse().map(pubMsg) });
+  const msgs = Q.getMsgs.all(req.params.cid).reverse().map(m => {
+    const pm = pubMsg(m);
+    pm.reactions = getReactionsForMsg(m.id);
+    return pm;
+  });
+  res.json({ messages: msgs });
 });
 
 app.delete('/api/messages/:mid', authMW, (req, res) => {
@@ -588,6 +635,44 @@ app.post('/api/account/delete', authMW, (req, res) => {
   res.clearCookie('wt');
   broadcast({ type: 'user_deleted', user_id: user.id, username: user.username });
   res.json({ ok: true });
+});
+
+// ════════════════════════════════════════════════════════════════
+// REACTIONS
+// ════════════════════════════════════════════════════════════════
+
+
+// ════════════════════════════════════════════════════════════════
+// REACTIONS
+// ════════════════════════════════════════════════════════════════
+function getReactionsForMsg(msgId) {
+  const rows = Q.getMsgReactions.all(msgId);
+  return rows.map(r => ({
+    emoji: r.emoji,
+    count: r.count,
+    users: r.usernames ? r.usernames.split(',') : [],
+    displays: r.displays ? r.displays.split(',') : [],
+  }));
+}
+
+app.post('/api/messages/:mid/react', authMW, (req, res) => {
+  const { emoji } = req.body || {};
+  if (!emoji || typeof emoji !== 'string' || emoji.length > 12)
+    return res.status(400).json({ error: 'Invalid emoji' });
+  const msg = Q.getMsgById.get(req.params.mid);
+  if (!msg) return res.status(404).json({ error: 'Message not found' });
+  if (msg.deleted) return res.status(400).json({ error: 'Cannot react to deleted message' });
+
+  const existing = Q.userReacted.get(msg.id, req.user.id, emoji);
+  if (existing) {
+    // Toggle off
+    Q.removeReaction.run(msg.id, req.user.id, emoji);
+  } else {
+    Q.addReaction.run(uuid(), msg.id, req.user.id, emoji);
+  }
+  const reactions = getReactionsForMsg(msg.id);
+  broadcast({ type: 'reaction_update', message_id: msg.id, channel_id: msg.channel_id, reactions });
+  res.json({ ok: true, reactions });
 });
 
 // ════════════════════════════════════════════════════════════════
@@ -681,9 +766,10 @@ wss.on('connection', (ws, req) => {
       // Fetch with joined reply info
       const rows = Q.getMsgs.all(channel_id);
       const full = rows.find(m => m.id === id);
+      const reactions = getReactionsForMsg(id);
       const payload = {
         type: 'message',
-        message: full ? pubMsg(full) : {
+        message: full ? { ...pubMsg(full), reactions } : {
           id, channel_id, content: text, image_url: image_url || null,
           reply_to_id: reply_to_id || null, reply_content: null, reply_display: null,
           created: now(), author_id: freshUser.id, username: freshUser.username,
