@@ -122,26 +122,17 @@ db.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS reactions (
-    id         TEXT PRIMARY KEY,
-    message_id TEXT NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
-    user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    emoji      TEXT NOT NULL,
-    created    INTEGER DEFAULT (unixepoch()),
-    UNIQUE(message_id, user_id, emoji)
-  );
-  CREATE INDEX IF NOT EXISTS idx_msg_ch ON messages(channel_id, created);
-  CREATE INDEX IF NOT EXISTS idx_react_msg ON reactions(message_id);
-
-  CREATE TABLE IF NOT EXISTS reactions (
     message_id TEXT NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
     user_id    TEXT NOT NULL REFERENCES users(id)    ON DELETE CASCADE,
     emoji      TEXT NOT NULL,
     created    INTEGER DEFAULT (unixepoch()),
     PRIMARY KEY (message_id, user_id, emoji)
   );
+  CREATE INDEX IF NOT EXISTS idx_msg_ch ON messages(channel_id, created);
   CREATE INDEX IF NOT EXISTS idx_react_msg ON reactions(message_id);
   CREATE INDEX IF NOT EXISTS idx_sess_u ON sessions(user_id);
 `);
+
 
 // Safe migrations for existing databases
 const migrations = [
@@ -157,6 +148,28 @@ const migrations = [
   `ALTER TABLE messages ADD COLUMN deleted INTEGER DEFAULT 0`,
 ];
 migrations.forEach(sql => { try { db.exec(sql); } catch (_) {} });
+
+// Fix reactions table if a previous broken version created it with an `id` column
+try {
+  const cols = db.prepare("PRAGMA table_info(reactions)").all().map(c => c.name);
+  if (cols.includes('id')) {
+    console.log('  Migrating reactions table to new schema...');
+    db.exec(`
+      CREATE TABLE reactions_new (
+        message_id TEXT NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+        user_id    TEXT NOT NULL REFERENCES users(id)    ON DELETE CASCADE,
+        emoji      TEXT NOT NULL,
+        created    INTEGER DEFAULT (unixepoch()),
+        PRIMARY KEY (message_id, user_id, emoji)
+      );
+      INSERT OR IGNORE INTO reactions_new (message_id,user_id,emoji,created)
+        SELECT message_id,user_id,emoji,created FROM reactions;
+      DROP TABLE reactions;
+      ALTER TABLE reactions_new RENAME TO reactions;
+      CREATE INDEX IF NOT EXISTS idx_react_msg ON reactions(message_id);
+    `);
+  }
+} catch (e) { console.warn('  Reactions migration warning:', e.message); }
 
 // Seed default server
 if (!db.prepare('SELECT id FROM servers WHERE id=?').get('wired')) {
@@ -215,11 +228,11 @@ const Q = {
   getMsgById:    db.prepare('SELECT * FROM messages WHERE id=?'),
   insertMsg:     db.prepare('INSERT INTO messages (id,channel_id,author_id,content,image_url,reply_to_id) VALUES (?,?,?,?,?,?)'),
   softDeleteMsg: db.prepare("UPDATE messages SET deleted=1, content='[message deleted]', image_url=NULL WHERE id=?"),
-  getReactions: db.prepare(`
-    SELECT r.emoji, r.user_id, u.display, u.username
-    FROM reactions r JOIN users u ON r.user_id=u.id
-    WHERE r.message_id=?
-  `),
+
+  // Reactions — message_id+user_id+emoji is the composite primary key (no id column)
+  addReaction:     db.prepare('INSERT OR IGNORE INTO reactions (message_id,user_id,emoji) VALUES (?,?,?)'),
+  removeReaction:  db.prepare('DELETE FROM reactions WHERE message_id=? AND user_id=? AND emoji=?'),
+  userReacted:     db.prepare('SELECT 1 FROM reactions WHERE message_id=? AND user_id=? AND emoji=?'),
   getMsgReactions: db.prepare(`
     SELECT emoji, COUNT(*) as count,
            GROUP_CONCAT(u.username) as usernames,
@@ -227,16 +240,8 @@ const Q = {
     FROM reactions r JOIN users u ON r.user_id=u.id
     WHERE r.message_id=?
     GROUP BY emoji
-    ORDER BY count DESC, MIN(r.created)
+    ORDER BY MIN(r.created)
   `),
-  addReaction:    db.prepare('INSERT OR IGNORE INTO reactions (id,message_id,user_id,emoji) VALUES (?,?,?,?)'),
-  removeReaction: db.prepare('DELETE FROM reactions WHERE message_id=? AND user_id=? AND emoji=?'),
-  userReacted:    db.prepare('SELECT id FROM reactions WHERE message_id=? AND user_id=? AND emoji=?'),
-
-  // Reactions
-  addReaction:    db.prepare('INSERT OR IGNORE INTO reactions (message_id,user_id,emoji) VALUES (?,?,?)'),
-  removeReaction: db.prepare('DELETE FROM reactions WHERE message_id=? AND user_id=? AND emoji=?'),
-  getReactions:   db.prepare('SELECT emoji, COUNT(*) as count, GROUP_CONCAT(user_id) as user_ids FROM reactions WHERE message_id=? GROUP BY emoji ORDER BY created'),
   getMsgReactions:db.prepare(`SELECT r.emoji, r.user_id, u.display, u.username FROM reactions r JOIN users u ON r.user_id=u.id WHERE r.message_id=? ORDER BY r.created`),
 
   // 2FA setup (while user is confirming the code)
@@ -640,11 +645,6 @@ app.post('/api/account/delete', authMW, (req, res) => {
 // ════════════════════════════════════════════════════════════════
 // REACTIONS
 // ════════════════════════════════════════════════════════════════
-
-
-// ════════════════════════════════════════════════════════════════
-// REACTIONS
-// ════════════════════════════════════════════════════════════════
 function getReactionsForMsg(msgId) {
   const rows = Q.getMsgReactions.all(msgId);
   return rows.map(r => ({
@@ -668,7 +668,7 @@ app.post('/api/messages/:mid/react', authMW, (req, res) => {
     // Toggle off
     Q.removeReaction.run(msg.id, req.user.id, emoji);
   } else {
-    Q.addReaction.run(uuid(), msg.id, req.user.id, emoji);
+    Q.addReaction.run(msg.id, req.user.id, emoji);
   }
   const reactions = getReactionsForMsg(msg.id);
   broadcast({ type: 'reaction_update', message_id: msg.id, channel_id: msg.channel_id, reactions });

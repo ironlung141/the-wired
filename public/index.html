@@ -359,6 +359,15 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .msg-wrap:hover .reaction-add{opacity:1}
 .reaction-add:hover{border-color:var(--red);color:var(--pale);background:rgba(139,32,53,.1)}
 
+/* quick reaction picker popup */
+.react-picker{position:fixed;background:var(--bg2);border:1px solid var(--dim2);border-radius:8px;
+  padding:8px;display:none;flex-wrap:wrap;gap:4px;width:212px;z-index:900;
+  box-shadow:0 8px 30px rgba(0,0,0,.7)}
+.react-picker.on{display:flex}
+.react-option{font-size:20px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;border-radius:6px;transition:background .12s,transform .12s;border:1px solid transparent}
+.react-option:hover{background:rgba(139,32,53,.2);border-color:var(--dim);transform:scale(1.12)}
+
 /* ══ AVATAR FIX — single source of truth ══
    Every avatar container: block, position:relative, border-radius:50%, overflow:hidden.
    Every avatar img: absolute fill. No flex, no flex children, no z-index fights. */
@@ -1419,9 +1428,13 @@ function openReactPicker(msgId, e){
     `<div class="react-option" onclick="toggleReaction('${msgId}','${em}')" title="${em}">${em}</div>`
   ).join('');
   p.classList.add('on');
-  // Position near cursor
-  const x = Math.min(e.clientX, window.innerWidth - 230);
-  const y = Math.max(e.clientY - 120, 8);
+  // Position near cursor, clamped to viewport
+  const pickerW = 212, pickerH = 90;
+  let x = e.clientX;
+  let y = e.clientY - pickerH - 8;
+  if (y < 8) y = e.clientY + 16; // flip below if not enough room above
+  if (x + pickerW > window.innerWidth - 8) x = window.innerWidth - pickerW - 8;
+  if (x < 8) x = 8;
   p.style.left = x + 'px';
   p.style.top = y + 'px';
   e.stopPropagation();
