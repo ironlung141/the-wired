@@ -327,19 +327,6 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .danger-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--red2);margin-bottom:10px}
 
 /* ── REACTIONS ── */
-.reaction{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border:1px solid var(--dim2);border-radius:12px;cursor:pointer;font-size:13px;transition:all .15s;background:rgba(139,32,53,.05);user-select:none}
-.reaction:hover{border-color:var(--red);background:rgba(139,32,53,.15)}
-.reaction.me{border-color:var(--red);background:rgba(139,32,53,.2);color:var(--pale)}
-.reaction-count{font-size:11px;color:var(--muted);font-family:var(--mono)}
-.reaction.me .reaction-count{color:var(--pale)}
-.reaction-add{display:inline-flex;align-items:center;justify-content:center;width:26px;height:22px;border:1px solid var(--dim);border-radius:12px;cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s;opacity:0;background:transparent}
-.msg-wrap:hover .reaction-add,.msg-reactions:not(:empty)~.reaction-add{opacity:1}
-.msg-reactions:not(:empty) .reaction-add{opacity:1}
-/* reaction picker (small emoji grid on hover) */
-.react-picker.on{display:flex}
-.react-cell{font-size:18px;cursor:pointer;padding:3px;border-radius:3px;transition:background .1s;border:1px solid transparent}
-.react-cell:hover{background:rgba(139,32,53,.2);border-color:var(--dim)}
-
 /* ── EMOJI ── */
 .emoji{font-style:normal;font-size:1.15em;vertical-align:-0.1em;display:inline-block}
 /* emoji picker button */
@@ -367,8 +354,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .reaction-count{font-size:11px;color:var(--muted);font-family:var(--mono);margin-left:2px}
 .reaction-add{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;
   background:transparent;border:1px dashed var(--dim2);border-radius:10px;cursor:pointer;
-  font-size:14px;color:var(--muted);transition:all .15s;opacity:0;line-height:1}
-.msg-wrap:hover .reaction-add,.msg-reactions .reaction-add{opacity:1}
+  font-size:14px;color:var(--muted);transition:opacity .15s,border-color .15s,color .15s,background .15s;
+  opacity:0;line-height:1}
+.msg-wrap:hover .reaction-add{opacity:1}
 .reaction-add:hover{border-color:var(--red);color:var(--pale);background:rgba(139,32,53,.1)}
 
 /* ══ AVATAR FIX — single source of truth ══
@@ -904,12 +892,17 @@ function handleWS(m){
       // Re-render just the reactions row in the DOM
       const el=document.querySelector(`.msg-wrap[data-mid="${CSS.escape(m.message_id)}"]`);
       if(el){
-        const newHtml=buildReactionsHtml({id:m.message_id,reactions:m.reactions});
-        const tmp=document.createElement('div');tmp.innerHTML=newHtml;
-        const newNode=tmp.firstChild;
         const existing=el.querySelector('.msg-reactions');
-        if(existing&&newNode) existing.replaceWith(newNode);
-        else if(!existing&&newNode){ const body=el.querySelector('.msg-body');if(body)body.appendChild(newNode); }
+        const newHtml=buildReactionsHtml({id:m.message_id,reactions:m.reactions});
+        if(!newHtml){
+          // No reactions left -> remove row entirely if present
+          if(existing) existing.remove();
+        } else {
+          const tmp=document.createElement('div');tmp.innerHTML=newHtml;
+          const newNode=tmp.firstChild;
+          if(existing) existing.replaceWith(newNode);
+          else { const body=el.querySelector('.msg-body'); if(body) body.appendChild(newNode); }
+        }
       }
       break;
     }
@@ -1405,13 +1398,16 @@ const QUICK_REACTS = ['👍','👎','❤️','😂','😮','😢','🔥','💀',
 
 function buildReactionsHtml(msg){
   const reactions = msg.reactions||[];
-  const addBtn = `<span class="reaction-add" onclick="openReactPicker('${esc(msg.id)}',event)" title="Add reaction">😄</span>`;
-  if(!reactions.length) return `<div class="msg-reactions" data-msgid="${esc(msg.id)}">${addBtn}</div>`;
+  // No reactions yet -> render nothing. The 😊 button in the hover toolbar
+  // is the only way to add the first reaction, so nothing should show under
+  // the message until someone has actually reacted.
+  if(!reactions.length) return '';
   const pills = reactions.map(r => {
     const mine = ME && r.users && Array.isArray(r.users) && r.users.includes(ME.username);
     const names = (r.displays||r.users||[]).join(', ');
     return `<span class="reaction${mine?' mine':''}" title="${esc(names)}" onclick="toggleReaction('${esc(msg.id)}','${esc(r.emoji)}')">${r.emoji}<span class="reaction-count">${r.count}</span></span>`;
   }).join('');
+  const addBtn = `<span class="reaction-add" onclick="openReactPicker('${esc(msg.id)}',event)" title="Add reaction">+</span>`;
   return `<div class="msg-reactions" data-msgid="${esc(msg.id)}">${pills}${addBtn}</div>`;
 }
 
